@@ -13,7 +13,7 @@ import java.util.Vector;
 public class main {
 
     public static java.util.Random prng = new Random();
-    public static double eta = 0.000001;
+    public static double eta = 0.00000001;
     public static int dimensionCount = 2;
     public static double[] coordinates = new double[dimensionCount];
     public static Vector history = new Vector();
@@ -27,13 +27,13 @@ public class main {
         individualNumber = 0;
 
         individual fittestIndividual;
-        individual[] population = main.generatePopulation(500);
+        individual[] population = main.generatePopulation(5000);
         history.addElement(population);
 
         int generation = 0;
         do {
             Arrays.sort(population, new individualsComparator()); // Order individuals
-            individual[] fittestIndividuals = main.getBestIndividuals(250, population); // Get 10 best individuals ("Selection")
+            individual[] fittestIndividuals = main.getBestIndividuals(2500, population); // Get 10 best individuals ("Selection")
             fittestIndividual = fittestIndividuals[0];
             individual[] nextGeneration = new individual[fittestIndividuals.length];
 
@@ -54,8 +54,11 @@ public class main {
             population = nextGeneration;
             history.addElement(population);
 //            System.out.println("Winner value: " + fittestIndividual.getValueAt(0));
-        } while ( (main.euclideanDistance(fittestIndividual.getValues(), main.coordinates) > eta) ); // break condition, distance is less than some threshold (alternatively, the break condition could be the distance change from one generation to the next below eta)
-        main.writeGnuPlotFile("history.dat", history);
+        }
+//        while (generation < 100);
+        while ( (main.euclideanDistance(fittestIndividual.getValues(), main.coordinates) > eta) ); // break condition, distance is less than some threshold (alternatively, the break condition could be the distance change from one generation to the next below eta)
+//        main.writeGnuPlotFile("history.dat", history);
+        main.writeManyGnuPlotFiles("history", history);
     }
 
     private static individual[] generatePopulation (int count) {
@@ -89,6 +92,33 @@ public class main {
         }
 //        System.out.println("Distance: "+ Math.sqrt(accumulator));
         return (double)(Math.sqrt(accumulator));
+    }
+
+    // In contrast to writeGnuPlotFile, this routine stores each generation in a different plot file so that an animation can be generated from them
+    public static void writeManyGnuPlotFiles(String prefixOfFileName, Vector history) {
+        System.out.println("Writing " + history.size()+ " gnuplot files '" + prefixOfFileName + "X.dat'");
+        for (int generation = 0; generation < history.size(); generation++) { // Walk through history
+            // Create files
+            try {
+                FileWriter fstream = new FileWriter("plots/" + prefixOfFileName + Integer.toString(generation) + ".dat");
+                BufferedWriter out = new BufferedWriter(fstream);
+                String comment ="# Usage example:\n# gnuplot> ... \n";
+                // Write the built strings to the file
+                out.write(comment);
+                for (int j = 0; j < ((individual[])history.elementAt(generation)).length; j++) { // Walk through population
+                    double[] dimValue = ((individual[])history.elementAt(generation))[j].getValues();
+                    for (int k = 0; k < dimensionCount; k++) { // Walk through components/dimensions
+//                        System.out.format("Writing history %3d, population %3d, component %3d%n",generation,j,k);
+                        // This avoids the automatic scientific notation (e.g. 3.726653172078671E-6)
+                        out.write((new java.math.BigDecimal(Double.toString(dimValue[k]))).toPlainString() + "\t");
+                    }
+                    out.write("\n");
+                }
+                out.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     // This writes the coordinates to a specified output file for use with gnuplot, e.g.

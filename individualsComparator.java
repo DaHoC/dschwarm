@@ -25,8 +25,12 @@ public class individualsComparator implements Comparator {
         else return 0;
          */
         // Here, we use (PI,1) as the desired tendency (calculate distance to (PI,1) , the nearest one with the smallest euclidian distance is the best individual)
+//        double distance1 = Math.abs(main.euclideanDistance(i1Values, main.coordinates) -(double)10 );
+//        double distance2 = Math.abs(main.euclideanDistance(i2Values, main.coordinates) -(double)10 );
+
         double distance1 = main.euclideanDistance(i1Values, main.coordinates);
         double distance2 = main.euclideanDistance(i2Values, main.coordinates);
+
         if (distance1 < distance2)
             return -1;
         else if (distance1 > distance2)
